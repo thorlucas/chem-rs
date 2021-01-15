@@ -1,5 +1,6 @@
 pub mod core;
 pub mod daylight;
+pub mod prelude;
 
 #[cfg(test)]
 mod tests {
@@ -99,12 +100,12 @@ mod tests {
         assert_eq!(molc, mole);
     }
 
-    /// Tests to parse simple straight chain SMILES
-    #[test]
-    fn can_parse_simple_smiles() {
-        let mola = molecule_from_smiles("CN");
-        let (molb, _, _) = methylamine();
+    // /// Tests to parse simple straight chain SMILES
+    //#[test]
+    //fn can_parse_simple_smiles() {
+    //let mola = molecule_from_smiles("CN");
+    //let (molb, _, _) = methylamine();
 
-        assert_eq!(mola, Ok(molb));
-    }
+    //assert_eq!(mola, Ok(molb));
+    //}
 }
