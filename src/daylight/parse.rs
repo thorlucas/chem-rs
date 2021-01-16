@@ -11,16 +11,6 @@ use nom::{
 };
 use std::ops::{RangeFrom, RangeTo};
 
-//pub fn bond(input: &str) -> IResult<&str, Bond> {
-//let tag_bond = |t, b| value(b, tag(t));
-//alt((
-//tag_bond("-", Bond::Single),
-//tag_bond("=", Bond::Double),
-//tag_bond("#", Bond::Triple),
-//tag_bond(":", Bond::Aromatic),
-//))(input)
-//}
-
 // TODO: Visibility? I want it to be seen by the test module...
 // TODO: Must be a shorter way of specifying trait bounds
 /// Recognizes up to n ASCII numerical characters. Fails if less than m
@@ -158,6 +148,31 @@ pub fn bracket_atom(input: &str) -> IResult<&str, Atom> {
                 charge,
                 atom_class,
             })
+        },
+    )(input)
+}
+
+pub fn bond(input: &str) -> IResult<&str, Bond> {
+    let tag_bond = |t, b| value(b, tag(t));
+    alt((
+        tag_bond("-", Bond::Single),
+        tag_bond("=", Bond::Double),
+        tag_bond("#", Bond::Triple),
+        tag_bond(":", Bond::Aromatic),
+    ))(input)
+}
+
+pub fn ring_bond(input: &str) -> IResult<&str, RingBond> {
+    map_res(
+        tuple((
+            opt(bond),
+            map_res(
+                alt((digit_m_n(1, 1), preceded(tag("%"), digit_m_n(2, 2)))),
+                |num_str: &str| num_str.parse::<usize>(),
+            ),
+        )),
+        |(bond, ring_number): (Option<Bond>, usize)| -> Result<RingBond, ()> {
+            Ok(RingBond { bond, ring_number })
         },
     )(input)
 }

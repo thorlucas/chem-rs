@@ -1,6 +1,13 @@
 // http://opensmiles.org/opensmiles.html
 
+pub use crate::core::Bond;
 pub use crate::core::Element;
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+pub struct RingBond {
+    pub bond: Option<Bond>,
+    pub ring_number: usize,
+}
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum Symbol {

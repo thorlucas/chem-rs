@@ -24,13 +24,13 @@ pub struct Molecule {
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
-pub struct AtomIndex(petgraph::graph::NodeIndex);
+pub struct AtomIndex(NodeIndex);
 
 // TODO: Proper error handling
 impl Molecule {
     pub fn new() -> Self {
         Molecule {
-            graph: petgraph::graph::Graph::new_undirected(),
+            graph: Graph::new_undirected(),
         }
     }
 

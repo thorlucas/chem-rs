@@ -117,7 +117,7 @@ mod tests {
         test_case("-155", ok("5", -15));
         test_case("-", ok("", -1));
         test_case("+", ok("", 1));
-        test_case("3", err("3", nom::error::ErrorKind::Tag));
+        test_case("3", err("3", ErrorKind::Tag));
     }
 
     #[test]
@@ -131,8 +131,8 @@ mod tests {
         test_case("Cl", ok("", Symbol::Element(Element::Cl)));
         test_case("n", ok("", Symbol::Aromatic(Element::N)));
         test_case("*", ok("", Symbol::Wildcard));
-        test_case("as", err("as", nom::error::ErrorKind::Tag));
-        test_case("Au", err("Au", nom::error::ErrorKind::Tag));
+        test_case("as", err("as", ErrorKind::Tag));
+        test_case("Au", err("Au", ErrorKind::Tag));
     }
 
     #[test]
@@ -178,44 +178,71 @@ mod tests {
             assert_eq!(bracket_atom(input), res);
         };
 
-        assert_eq!(
-            bracket_atom("[12CH3+:2]"),
-            ok(
-                "",
+        fn ok(
+            rest: &str,
+            symbol: Symbol,
+            isotope: Option<u16>,
+            hydrogens: u8,
+            charge: i8,
+            atom_class: Option<usize>,
+        ) -> IResult<&str, Atom> {
+            self::ok(
+                rest,
                 Atom {
-                    symbol: Symbol::Element(Element::C),
-                    isotope: Some(12),
-                    hydrogens: 3,
-                    charge: 1,
-                    atom_class: Some(2),
-                }
+                    symbol,
+                    isotope,
+                    hydrogens,
+                    charge,
+                    atom_class,
+                },
             )
+        }
+
+        test_case(
+            "[12CH3+:2]",
+            ok("", Symbol::Element(Element::C), Some(12), 3, 1, Some(2)),
         );
-        assert_eq!(
-            bracket_atom("[Br]"),
-            ok(
-                "",
-                Atom {
-                    symbol: Symbol::Element(Element::Br),
-                    isotope: None,
-                    hydrogens: 0,
-                    charge: 0,
-                    atom_class: None,
-                }
-            )
+        test_case(
+            "[Br]",
+            ok("", Symbol::Element(Element::Br), None, 0, 0, None),
         );
-        assert_eq!(
-            bracket_atom("[nH-2:35]"),
-            ok(
-                "",
-                Atom {
-                    symbol: Symbol::Aromatic(Element::N),
-                    isotope: None,
-                    hydrogens: 1,
-                    charge: -2,
-                    atom_class: Some(35),
-                }
-            )
+        test_case(
+            "[nH-2:35]CC",
+            ok("CC", Symbol::Aromatic(Element::N), None, 1, -2, Some(35)),
         );
+        test_case("[1h+:1]", err("h+:1]", ErrorKind::Tag));
+        test_case("[1+:1]", err("+:1]", ErrorKind::Tag));
+        test_case("[]", err("]", ErrorKind::Tag));
+    }
+
+    #[test]
+    fn can_parse_bond() {
+        let test_case = |input: &str, res: IResult<&str, Bond>| {
+            assert_eq!(bond(input), res);
+        };
+
+        test_case("-C", ok("C", Bond::Single));
+        test_case("=C", ok("C", Bond::Double));
+        test_case("#C", ok("C", Bond::Triple));
+        test_case(":C", ok("C", Bond::Aromatic));
+        test_case("~C", err("~C", ErrorKind::Tag));
+    }
+
+    #[test]
+    fn can_parse_ring_bond() {
+        let test_case = |input: &str, res: IResult<&str, RingBond>| {
+            assert_eq!(ring_bond(input), res);
+        };
+
+        fn ok(rest: &str, bond: Option<Bond>, ring_number: usize) -> IResult<&str, RingBond> {
+            self::ok(rest, RingBond { bond, ring_number })
+        }
+
+        test_case("=1C", ok("C", Some(Bond::Double), 1));
+        test_case("9c", ok("c", None, 9));
+        test_case("#24N", ok("4N", Some(Bond::Triple), 2));
+        test_case("#%24N", ok("N", Some(Bond::Triple), 24));
+        test_case("%245N", ok("5N", None, 24));
+        test_case("=C", err("C", ErrorKind::Tag));
     }
 }
