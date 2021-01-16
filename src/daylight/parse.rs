@@ -5,7 +5,7 @@ use nom::{
     character::complete::{digit1, satisfy},
     combinator::{map_res, opt, recognize, success, value},
     error::ParseError,
-    multi::many_m_n,
+    multi::{fold_many0, many0, many_m_n},
     sequence::{pair, preceded, terminated, tuple},
     AsChar, Compare, IResult, InputIter, InputLength, InputTake, Offset, Parser, Slice,
 };
@@ -190,5 +190,37 @@ pub fn ring_bond(input: &str) -> IResult<&str, RingBond> {
         |(bond, ring_number): (Option<Bond>, usize)| -> Result<RingBond, ()> {
             Ok(RingBond { bond, ring_number })
         },
+    )(input)
+}
+
+pub fn branched_atom(input: &str) -> IResult<&str, BranchedAtom> {
+    map_res(
+        tuple((atom, many0(ring_bond), many0(branch))),
+        |(atom, ring_bonds, branches): (Atom, Vec<RingBond>, Vec<Branch>)| -> Result<BranchedAtom, ()> {
+            Ok(BranchedAtom { atom, ring_bonds, branches })
+        }
+    )(input)
+}
+
+pub fn chain(input: &str) -> IResult<&str, Chain> {
+    let (input, init) = branched_atom(input)?;
+
+    fold_many0(
+        tuple((opt(bond), branched_atom)),
+        Chain::BranchedAtom(init),
+        |chain: Chain, (bond, branched_atom): (Option<Bond>, BranchedAtom)| -> Chain {
+            Chain::ChainBond(ChainBond {
+                bond,
+                branched_atom,
+                chain: Box::new(chain),
+            })
+        },
+    )(input)
+}
+
+pub fn branch(input: &str) -> IResult<&str, Branch> {
+    map_res(
+        bracketed("(", ")", tuple((opt(bond), chain))),
+        |(bond, chain): (Option<Bond>, Chain)| -> Result<Branch, ()> { Ok(Branch { bond, chain }) },
     )(input)
 }
