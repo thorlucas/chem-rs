@@ -465,6 +465,32 @@ mod tests {
                     },
                 ),
             );
+            test_case(
+                "C=12C",
+                ok(
+                    "C",
+                    BranchedAtom {
+                        atom: Atom {
+                            isotope: None,
+                            symbol: Symbol::Element(Element::C),
+                            charge: None,
+                            hydrogens: None,
+                            atom_class: None,
+                        },
+                        ring_bonds: vec![
+                            RingBond {
+                                bond: Some(Bond::Double),
+                                ring_number: 1,
+                            },
+                            RingBond {
+                                bond: None,
+                                ring_number: 2,
+                            },
+                        ],
+                        branches: vec![],
+                    },
+                ),
+            );
         }
     }
 }
