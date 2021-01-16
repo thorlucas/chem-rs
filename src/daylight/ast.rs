@@ -21,7 +21,7 @@ pub struct Atom {
     pub isotope: Option<u16>,
     pub symbol: Symbol,
     // chiral
-    pub hydrogens: u8,
-    pub charge: i8,
+    pub hydrogens: Option<u8>,
+    pub charge: Option<i8>,
     pub atom_class: Option<usize>,
 }

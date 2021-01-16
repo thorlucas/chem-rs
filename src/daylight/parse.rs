@@ -133,8 +133,8 @@ pub fn bracket_atom(input: &str) -> IResult<&str, Atom> {
                     opt(isotope),
                     symbol,
                     // opt chiral
-                    alt((hydrogens, success(0))),
-                    alt((charge, success(0))),
+                    opt(hydrogens),
+                    opt(charge),
                     opt(atom_class),
                 )),
                 tag("]"),
@@ -150,6 +150,22 @@ pub fn bracket_atom(input: &str) -> IResult<&str, Atom> {
             })
         },
     )(input)
+}
+
+pub fn organic_atom(input: &str) -> IResult<&str, Atom> {
+    map_res(organic_symbol, |symbol| -> Result<Atom, ()> {
+        Ok(Atom {
+            symbol,
+            isotope: None,
+            charge: None,
+            atom_class: None,
+            hydrogens: None,
+        })
+    })(input)
+}
+
+pub fn atom(input: &str) -> IResult<&str, Atom> {
+    alt((bracket_atom, organic_atom))(input)
 }
 
 pub fn bond(input: &str) -> IResult<&str, Bond> {
